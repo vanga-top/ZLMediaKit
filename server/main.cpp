@@ -27,11 +27,15 @@
 #include "WebHook.h"
 
 #if defined(ENABLE_VERSION)
+
 #include "Version.h"
+
 #endif
 
 #if !defined(_WIN32)
+
 #include "System.h"
+
 #endif//!defined(_WIN32)
 
 using namespace std;
@@ -40,56 +44,56 @@ using namespace mediakit;
 
 namespace mediakit {
 ////////////HTTP配置///////////
-namespace Http {
+    namespace Http {
 #define HTTP_FIELD "http."
-const string kPort = HTTP_FIELD"port";
-const string kSSLPort = HTTP_FIELD"sslport";
-onceToken token1([](){
-    mINI::Instance()[kPort] = 80;
-    mINI::Instance()[kSSLPort] = 443;
-},nullptr);
-}//namespace Http
+        const string kPort = HTTP_FIELD"port";
+        const string kSSLPort = HTTP_FIELD"sslport";
+        onceToken token1([]() {
+            mINI::Instance()[kPort] = 80;
+            mINI::Instance()[kSSLPort] = 443;
+        }, nullptr);
+    }//namespace Http
 
 ////////////SHELL配置///////////
-namespace Shell {
+    namespace Shell {
 #define SHELL_FIELD "shell."
-const string kPort = SHELL_FIELD"port";
-onceToken token1([](){
-    mINI::Instance()[kPort] = 9000;
-},nullptr);
-} //namespace Shell
+        const string kPort = SHELL_FIELD"port";
+        onceToken token1([]() {
+            mINI::Instance()[kPort] = 9000;
+        }, nullptr);
+    } //namespace Shell
 
 ////////////RTSP服务器配置///////////
-namespace Rtsp {
+    namespace Rtsp {
 #define RTSP_FIELD "rtsp."
-const string kPort = RTSP_FIELD"port";
-const string kSSLPort = RTSP_FIELD"sslport";
-onceToken token1([](){
-    mINI::Instance()[kPort] = 554;
-    mINI::Instance()[kSSLPort] = 332;
-},nullptr);
+        const string kPort = RTSP_FIELD"port";
+        const string kSSLPort = RTSP_FIELD"sslport";
+        onceToken token1([]() {
+            mINI::Instance()[kPort] = 554;
+            mINI::Instance()[kSSLPort] = 332;
+        }, nullptr);
 
-} //namespace Rtsp
+    } //namespace Rtsp
 
 ////////////RTMP服务器配置///////////
-namespace Rtmp {
+    namespace Rtmp {
 #define RTMP_FIELD "rtmp."
-const string kPort = RTMP_FIELD"port";
-const string kSSLPort = RTMP_FIELD"sslport";
-onceToken token1([](){
-    mINI::Instance()[kPort] = 1935;
-    mINI::Instance()[kSSLPort] = 19350;
-},nullptr);
-} //namespace RTMP
+        const string kPort = RTMP_FIELD"port";
+        const string kSSLPort = RTMP_FIELD"sslport";
+        onceToken token1([]() {
+            mINI::Instance()[kPort] = 1935;
+            mINI::Instance()[kSSLPort] = 19350;
+        }, nullptr);
+    } //namespace RTMP
 
 ////////////Rtp代理相关配置///////////
-namespace RtpProxy {
+    namespace RtpProxy {
 #define RTP_PROXY_FIELD "rtp_proxy."
-const string kPort = RTP_PROXY_FIELD"port";
-onceToken token1([](){
-    mINI::Instance()[kPort] = 10000;
-},nullptr);
-} //namespace RtpProxy
+        const string kPort = RTP_PROXY_FIELD"port";
+        onceToken token1([]() {
+            mINI::Instance()[kPort] = 10000;
+        }, nullptr);
+    } //namespace RtpProxy
 
 }  // namespace mediakit
 
@@ -161,19 +165,21 @@ public:
 #endif
     }
 
-    ~CMD_main() override{}
-    const char *description() const override{
+    ~CMD_main() override {}
+
+    const char *description() const override {
         return "主程序命令参数";
     }
 };
 
 #if !defined(_WIN32)
-static void inline listen_shell_input(){
+
+static void inline listen_shell_input() {
     cout << "> 欢迎进入命令模式，你可以输入\"help\"命令获取帮助" << endl;
     cout << "> " << std::flush;
 
-    signal(SIGTTOU,SIG_IGN);
-    signal(SIGTTIN,SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
 
     SockUtil::setNoBlocked(STDIN_FILENO);
     auto oninput = [](int event) {
@@ -202,14 +208,15 @@ static void inline listen_shell_input(){
             EventPollerPool::Instance().getFirstPoller()->delEvent(STDIN_FILENO);
         }
     };
-    EventPollerPool::Instance().getFirstPoller()->addEvent(STDIN_FILENO, Event_Read | Event_Error | Event_LT,oninput);
+    EventPollerPool::Instance().getFirstPoller()->addEvent(STDIN_FILENO, Event_Read | Event_Error | Event_LT, oninput);
 }
+
 #endif//!defined(_WIN32)
 
 //全局变量，在WebApi中用于保存配置文件用
 string g_ini_file;
 
-int start_main(int argc,char *argv[]) {
+int start_main(int argc, char *argv[]) {
     {
         CMD_main cmd_main;
         try {
@@ -252,13 +259,13 @@ int start_main(int argc,char *argv[]) {
         //加载配置文件，如果配置文件不存在就创建一个
         loadIniConfig(g_ini_file.data());
 
-        if(!File::is_dir(ssl_file.data())){
+        if (!File::is_dir(ssl_file.data())) {
             //不是文件夹，加载证书，证书包含公钥和私钥
             SSL_Initor::Instance().loadCertificate(ssl_file.data());
-        }else{
+        } else {
             //加载文件夹下的所有证书
-            File::scanDir(ssl_file,[](const string &path, bool isDir){
-                if(!isDir){
+            File::scanDir(ssl_file, [](const string &path, bool isDir) {
+                if (!isDir) {
                     //最后的一个证书会当做默认证书(客户端ssl握手时未指定主机)
                     SSL_Initor::Instance().loadCertificate(path.data());
                 }
@@ -301,35 +308,35 @@ int start_main(int argc,char *argv[]) {
 
         try {
             //rtsp服务器，端口默认554
-            if(rtspPort) { rtspSrv->start<RtspSession>(rtspPort); }
+            if (rtspPort) { rtspSrv->start<RtspSession>(rtspPort); }
             //rtsps服务器，端口默认322
-            if(rtspsPort) { rtspSSLSrv->start<RtspSessionWithSSL>(rtspsPort); }
+            if (rtspsPort) { rtspSSLSrv->start<RtspSessionWithSSL>(rtspsPort); }
 
             //rtmp服务器，端口默认1935
-            if(rtmpPort) { rtmpSrv->start<RtmpSession>(rtmpPort); }
+            if (rtmpPort) { rtmpSrv->start<RtmpSession>(rtmpPort); }
             //rtmps服务器，端口默认19350
-            if(rtmpsPort) { rtmpsSrv->start<RtmpSessionWithSSL>(rtmpsPort); }
+            if (rtmpsPort) { rtmpsSrv->start<RtmpSessionWithSSL>(rtmpsPort); }
 
             //http服务器，端口默认80
-            if(httpPort) { httpSrv->start<HttpSession>(httpPort); }
+            if (httpPort) { httpSrv->start<HttpSession>(httpPort); }
             //https服务器，端口默认443
-            if(httpsPort) { httpsSrv->start<HttpsSession>(httpsPort); }
+            if (httpsPort) { httpsSrv->start<HttpsSession>(httpsPort); }
 
             //telnet远程调试服务器
-            if(shellPort) { shellSrv->start<ShellSession>(shellPort); }
+            if (shellPort) { shellSrv->start<ShellSession>(shellPort); }
 
 #if defined(ENABLE_RTPPROXY)
             //创建rtp服务器
-            if(rtpPort){ rtpServer->start(rtpPort); }
+            if (rtpPort) { rtpServer->start(rtpPort); }
 #endif//defined(ENABLE_RTPPROXY)
 
-        }catch (std::exception &ex){
+        } catch (std::exception &ex) {
             WarnL << "端口占用或无权限:" << ex.what() << endl;
             ErrorL << "程序启动失败，请修改配置文件中端口号后重试!" << endl;
             sleep(1);
 #if !defined(_WIN32)
-            if(pid != getpid()){
-                kill(pid,SIGINT);
+            if (pid != getpid()) {
+                kill(pid, SIGINT);
             }
 #endif
             return -1;
@@ -370,9 +377,12 @@ int start_main(int argc,char *argv[]) {
 }
 
 #ifndef DISABLE_MAIN
-int main(int argc,char *argv[]) {
-    return start_main(argc,argv);
+
+int main(int argc, char *argv[]) {
+    std::cout << "start server...";
+    return start_main(argc, argv);
 }
+
 #endif //DISABLE_MAIN
 
 
